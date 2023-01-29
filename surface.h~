@@ -1,0 +1,51 @@
+#ifndef SURFACE_H
+#define SURFACE_H
+
+#include "geometry.h"
+
+#define SURFACE_MAX_CELLS 256
+
+using namespace math;
+
+class Surface
+{
+public:
+    enum En_Axis
+    {
+        AXIS_X=0,
+        AXIS_Y=1,
+        AXIS_Z=2
+    };
+
+    Surface(size_t h=0x10,double size=1.0);
+    //  break surface on cells
+    bool setSize(size_t h,double size);
+    //  number of cells in single dimension
+    size_t cellSize()const;
+    //  return extreme points associated with specified cells
+    Cell getCell(size_t cell_x,size_t cell_z)const;
+    //
+    void setWorldRange(En_Axis axis,double min,double max);
+
+private:
+    //  helpers to get coord. of specified point
+    double * _pointPtr(size_t pt_x,size_t pt_z)const;
+    size_t _pointOffset(size_t pt_x,size_t pt_z)const;
+
+private:
+    //  world coord.
+    Range m_x_range;
+    Range m_y_range;
+    Range m_z_range;
+
+private:
+    //  screen parameters
+    Point3d m_tl;
+    double m_size;
+    Vector3d m_normal;
+    size_t m_h;
+    //  array to store coord. of points
+    double * m_points;
+};
+
+#endif // SURFACE_H

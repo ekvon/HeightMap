@@ -1,0 +1,71 @@
+#include "surface.h"
+
+#include <stdlib.h>
+
+Surface::Surface(size_t h,double size):m_h(h),m_size(size){
+    //  'm_tl' is initialized with default (0,0,0) value
+    this->setSize(h,size);
+}
+
+bool Surface::setSize(size_t h,double size)
+{
+    if(SURFACE_MAX_CELLS<h)
+        return false;
+    m_h=h;
+    m_size=size;
+    double stride=m_size/h;
+    //  Initialization of points coord. Each point has three coord. of type double.
+    m_points=new double[(h+1)*(h+1)*3];
+    for(size_t x=0;x<=h;x++){
+        for(size_t z=0;z<=h;z++){
+            size_t off=(x*(h+1)+z)*3;
+            //  x
+            *(m_points+off)=m_tl.x+x*stride;
+            //  y (altitude)
+            *(m_points+off+1)=/*((double)rand())/(4*RAND_MAX)*/0;
+            //  z
+            *(m_points+off+2)=m_tl.z+z*stride;
+        }
+    }
+    m_normal=Vector3d(0,1,0);
+    return true;
+}
+
+size_t Surface::cellSize()const{
+    return m_h;
+}
+
+Cell Surface::getCell(size_t cell_x, size_t cell_z) const{
+    /*
+     * Here 'cell_x' and 'cell_z' are coord. of cell. They MUST be in range [0,SURFACE_MAX_CELLS).
+     * Each cell has four extreme points.
+     */
+    Cell cell;
+    //  the first extreme points has offset
+    double * coord=this->_pointPtr(cell_x,cell_z);
+    cell.m_pt0=Point3d(coord);
+    coord=this->_pointPtr(cell_x+1,cell_z);
+    cell.m_pt1=Point3d(coord);
+    coord=this->_pointPtr(cell_x+1,cell_z+1);
+    cell.m_pt2=Point3d(coord);
+    coord=this->_pointPtr(cell_x,cell_z+1);
+    cell.m_pt3=Point3d(coord);
+    return cell;
+}
+
+void Surface::setWorldRange(En_Axis axis, double min, double max){
+    switch(axis){
+    case(AXIS_X):{m_x_range.first=min;m_x_range.second=max;return;}
+    case(AXIS_Y):{m_y_range.first=min;m_y_range.second=max;return;}
+    case(AXIS_Z):{m_z_range.first=min;m_z_range.second=max;return;}
+    default:{return;}
+    }
+}
+
+double * Surface::_pointPtr(size_t pt_x, size_t pt_z) const{
+    return m_points+this->_pointOffset(pt_x,pt_z);
+}
+
+size_t Surface::_pointOffset(size_t pt_x, size_t pt_z) const{
+    return (pt_x*(m_h+1)+pt_z)*3;
+}
